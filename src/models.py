@@ -77,7 +77,13 @@ def train_ml_model(matches_file='data/raw/historical_matches.csv'):
     X = (df['player_elo'] - df['opponent_elo']).values.reshape(-1, 1)
     y = df['win'].values
     
-    # Train model
+    # Calculate Swiss Elo accuracy
+    swiss_probs = 1 / (1 + 10 ** ((df['opponent_elo'] - df['player_elo']) / ELO_SCALE))
+    swiss_predictions = (swiss_probs >= 0.5).astype(int)
+    swiss_accuracy = (swiss_predictions == y).mean()
+    print(f"Swiss Elo formula accuracy: {swiss_accuracy:.3f}")
+    
+    # Train ML model
     _ml_model = LogisticRegression()
     _ml_model.fit(X, y)
     
