@@ -39,7 +39,6 @@ def calculate_delta_elo(result, probability):
     """
     return K_FACTOR * (result - probability)
 
-
 def calculate_final_elo(initial_elo, delta_elos):
     """
     Calculate final Elo after a series of matches.
@@ -92,7 +91,6 @@ def train_ml_model(matches_file='data/raw/historical_matches.csv'):
     
     return _ml_model
 
-
 def ml_probability(player_elo, opponent_elo):
     """
     Calculate win probability using ML model.
@@ -105,7 +103,6 @@ def ml_probability(player_elo, opponent_elo):
     
     elo_diff = player_elo - opponent_elo
     return _ml_model.predict_proba([[elo_diff]])[0][1]
-
 
 def get_ml_model():
     """Get the trained ML model."""

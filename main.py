@@ -13,7 +13,8 @@ from src.models import (
     ml_probability,
     simulate_match_elo,
     simulate_match_ml,
-    K_FACTOR
+    K_FACTOR,
+    ELO_SCALE
 )
 
 # Set random seed for reproducibility
@@ -67,6 +68,7 @@ male_df = pd.read_csv('data/raw/elo-rankings_male_20251218.csv', sep=';', encodi
 male_df = male_df[(male_df['ELO_KLASSIERUNG'] >= 11) & (male_df['ELO_KLASSIERUNG'] <= 21)]
 
 national_opponents = pd.concat([female_df, male_df], ignore_index=True)
+
 national_elos = national_opponents['ELO_WERT'].values
 
 print(f"Loaded {len(national_elos)} national opponents")
@@ -75,24 +77,24 @@ print(f"Loaded {len(national_elos)} national opponents")
 # HELPER FUNCTIONS
 # ============================================================
 
-
 def draw_league_opponents(team, n_matches):
     """
-    Draw n_matches opponents from a team based on intervention probabilities.
-    No repeat opponents allowed.
+    Draw n_matches opponents based on intervention probability.
+    Each player appears with probability = interventions/8.
+    Higher intervention players are checked first.
     """
-    # Filter out players with 0 interventions
-    available = [p for p in team if p["interventions"] > 0]
+    # Sort by interventions (highest first)
+    sorted_team = sorted(team, key=lambda p: -p["interventions"])
     
-    # Calculate probabilities (interventions / 8)
-    probs = np.array([p["interventions"] / 8 for p in available])
-    probs = probs / probs.sum()  # Normalize
+    selected = []
+    for p in sorted_team:
+        prob = p["interventions"] / 8
+        if np.random.random() < prob:
+            selected.append(p["elo"])
+            if len(selected) == n_matches:
+                break
     
-    # Draw opponents without replacement
-    indices = np.random.choice(len(available), size=min(n_matches, len(available)), 
-                               replace=False, p=probs)
-    
-    return [available[i]["elo"] for i in indices]
+    return selected
 
 
 def draw_national_opponents(n_matches):
@@ -102,6 +104,8 @@ def draw_national_opponents(n_matches):
     """
     indices = np.random.choice(len(national_elos), size=n_matches, replace=False)
     return national_elos[indices]
+
+
 
 
 # ============================================================
