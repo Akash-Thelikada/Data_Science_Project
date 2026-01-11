@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Swiss Table Tennis Elo Rating Simulation</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <script defer=""
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Swiss Table Tennis Elo Rating Simulation</h1>
+</header>
+<h1 id="project-overview-conceptual-brief-draft">Project Overview –
+Conceptual Brief (draft)</h1>
+<h2 id="context-and-motivation">Context and Motivation</h2>
+<p>In Swiss table tennis, each competitive player is assigned a
+numerical rating called Elo. This rating can be thought of as a point
+score that represents a player’s competitive strength.</p>
+<ul>
+<li>A player with more Elo points is considered stronger than a player
+with fewer points.</li>
+<li>The difference in Elo points between two players reflects how likely
+one player is to win against the other.</li>
+<li>When a player wins or loses a match, their Elo score changes
+according to a predefined rule.</li>
+</ul>
+<p>In this sense, the Elo system creates a ranking hierarchy: players
+are ordered by Elo points, and these points evolve over time as matches
+are played.</p>
+<p>While the Elo update rule is deterministic once a match result is
+known, real competition is inherently uncertain. Players face different
+opponents, match outcomes fluctuate, and a single month of competition
+can lead to very different ranking trajectories.</p>
+<p>As a competitive player, I am not interested in predicting a single
+“most likely” future Elo value. Instead, I want to understand the range
+of plausible outcomes:</p>
+<p><strong>How much could my Elo realistically increase or decrease over
+a typical month of competition?</strong></p>
+<h2 id="core-idea-of-the-project">Core Idea of the Project</h2>
+<p>The key idea of the project is to treat a month of competition as a
+random experiment rather than a fixed trajectory.</p>
+<p>Instead of asking: &gt; “What will my Elo be next month?”</p>
+<p>the project asks: &gt; “If this month were replayed many times under
+realistic conditions, what distribution of Elo outcomes would we
+observe?”</p>
+<p>To answer this question, the project uses <strong>Monte Carlo
+simulation</strong>: the same month is simulated thousands of times,
+each time with different random match outcomes. This produces a
+distribution of final Elo points, rather than a single predicted
+value.</p>
+<h2 id="what-is-being-simulated">What Is Being Simulated</h2>
+<p>The project simulates the evolution of a competitive player’s Elo
+rating over a single month of competition, treating this month as a
+probabilistic experiment rather than a deterministic sequence of
+events.</p>
+<p>At a high level, each simulated month follows the same logical
+pipeline:</p>
+<ol type="1">
+<li>A monthly competition structure is defined, consisting of league
+matches and a tournament.</li>
+<li>For each match in the month, an opponent is selected according to
+institutional rules (league rosters or tournament pools).</li>
+<li>A probability of winning is assigned to the match.</li>
+<li>A win or loss outcome is randomly drawn based on this
+probability.</li>
+<li>Elo points are updated using the official Swiss Elo update
+system.</li>
+<li>The entire month is repeated many times using Monte Carlo simulation
+to generate a distribution of possible end-of-month Elo outcomes.</li>
+</ol>
+<p>The goal is not to predict a single future Elo value, but to observe
+how Elo outcomes vary across many plausible realizations of the same
+competitive month.</p>
+<p>All detailed modeling assumptions (competition format, opponent
+sampling rules, probability models, and parameter values) are specified
+explicitly in the Modeling Choices &amp; Hypotheses section.</p>
+<h2 id="why-monte-carlo-simulation-is-used">Why Monte Carlo Simulation
+Is Used</h2>
+<p>A single month of competition is subject to substantial randomness:
+match outcomes are uncertain, opponents vary in strength, and small
+differences in results can lead to different ranking trajectories.</p>
+<p>Monte Carlo simulation addresses this uncertainty by replaying the
+same month thousands of times, each time with different random outcomes.
+This produces an <strong>empirical distribution</strong> of final Elo
+values, rather than a single point estimate.</p>
+<p>This distribution-based perspective allows us to quantify: - expected
+Elo change, - downside and upside risk, - and the overall variability of
+ranking outcomes.</p>
+<h2 id="role-of-win-probability-modeling">Role of Win Probability
+Modeling</h2>
+<p>A key component of the simulation is the assignment of winning
+probabilities to individual matches.</p>
+<p>The project deliberately distinguishes between: - the simulation of
+match outcomes, and - the update of Elo points, which always follows the
+official Swiss system.</p>
+<p>Two alternative models are used to generate match outcomes:</p>
+<ol type="1">
+<li><strong>Official Elo-based probabilities</strong>, derived directly
+from the Swiss Elo formula.</li>
+<li><strong>Machine-learning-based probabilities</strong>, learned
+empirically from historical match data involving many players.</li>
+</ol>
+<p>Importantly, these two models differ only in how match outcomes are
+generated. All Elo point updates are computed using the same official
+Swiss Elo update rule, ensuring that the ranking evolution remains
+realistic and comparable across scenarios.</p>
+<h2 id="what-is-compared-across-simulations">What Is Compared Across
+Simulations</h2>
+<p>The simulation is run separately under each probability model, while
+holding all other elements constant.</p>
+<p>The comparison focuses on: - how the distribution of monthly Elo
+outcomes changes, - whether dispersion, skewness, or tail risk differs,
+- and how sensitive ranking uncertainty is to probability modeling
+assumptions.</p>
+<p>The project does not aim to declare one probability model “better”
+than the other in an absolute sense. Instead, it evaluates how different
+modeling choices translate into different uncertainty profiles for
+ranking evolution.</p>
+<h2 id="output-of-the-project">Output of the Project</h2>
+<p>The final outputs of the simulation are: - distributions of
+end-of-month Elo values, - summary statistics (mean, quantiles), - and
+visual comparisons between scenarios.</p>
+<p>These outputs form the basis for interpretation, discussion of
+limitations, and potential extensions.</p>
+<h2 id="transition-to-modeling-choices-hypotheses">Transition to
+Modeling Choices &amp; Hypotheses</h2>
+<p>The remainder of the project formalizes the elements described
+above.</p>
+<p>In particular, the Modeling Choices &amp; Hypotheses section
+specifies: - the exact structure of a competitive month, - opponent
+sampling rules, - win probability models, - and the Elo update
+mechanism.</p>
+<p>The code implementation is expected to follow these specifications
+exactly, without introducing additional assumptions.</p>
+<hr />
+<h1 id="research-question">Research Question</h1>
+<p><strong>How uncertain is the short-term evolution of a Swiss table
+tennis player’s Elo ranking over a typical month of competition, and how
+sensitive is this uncertainty to the choice of win-probability model
+(official Elo-based probabilities versus a data-driven machine learning
+alternative)?</strong></p>
+<hr />
+<h1 id="modeling-choices-and-hypotheses">Modeling Choices and
+Hypotheses</h1>
+<h2 id="scope-and-objective-of-the-model">Scope and Objective of the
+Model</h2>
+<p>The objective of the model is not to predict a single future Elo
+rating, but to characterize the <strong>distribution of plausible
+short-term ranking outcomes</strong> for a Swiss table tennis
+player.</p>
+<p>The model therefore focuses on uncertainty and variability, rather
+than point forecasts.</p>
+<p>The analysis is restricted to a short-term horizon of one typical
+month of competition, which allows the model to remain interpretable
+while capturing the main sources of randomness affecting ranking
+evolution.</p>
+<h2 id="structural-assumptions-on-competition-format">Structural
+Assumptions on Competition Format</h2>
+<p>A month of competition is modeled as a fixed and stylized sequence of
+competitive events, designed to approximate a realistic competitive
+workload rather than replicating exact institutional formats.</p>
+<p>The player is assumed to participate in: - <strong>two league
+encounters</strong>, each consisting of three individual one-on-one
+matches, and - <strong>one national tournament</strong>.</p>
+<p>To ensure a consistent number of matches across simulated months, the
+tournament is modeled using a hypothetical placement-based structure
+that guarantees a fixed workload. Specifically, the tournament is
+assumed to involve a group stage of three matches, followed by four
+additional placement matches, yielding a total of seven tournament
+matches.</p>
+<p>This structure does not reflect the standard Swiss tournament system,
+where early elimination may reduce the number of matches played.
+Instead, it is introduced as a modeling device to approximate the
+intensity of competition over a month while maintaining tractability and
+comparability across Monte Carlo simulations. The implications of this
+simplification are discussed in the limitations section.</p>
+<h2 id="match-outcome-assumptions">Match Outcome Assumptions</h2>
+<p>Each match outcome is modeled as a binary random variable (win or
+loss).</p>
+<ul>
+<li>Match scores, set differences, and margin of victory are not
+considered.</li>
+<li>The effect of these omitted variables is implicitly absorbed into
+the win probability.</li>
+</ul>
+<p>Match outcomes are assumed to be conditionally independent given the
+win probabilities, meaning that any dependence between matches operates
+only through changes in the player’s Elo rating over time.</p>
+<h2 id="opponent-sampling-assumptions">Opponent Sampling
+Assumptions</h2>
+<p>Opponents faced by the player during the month are modeled
+differently for league encounters and for the national tournament,
+reflecting the institutional structure of Swiss table tennis.</p>
+<h3 id="league-opponents-scheduled-clubs-roster-based-selection">League
+opponents (scheduled clubs, roster-based selection)</h3>
+<p>For league play, the opposing clubs are assumed to be known in
+advance, as the season schedule is fixed at the beginning of the league.
+For each of the two scheduled league encounters, the opponent faced by
+the player is modeled as a random draw from the roster of the opposing
+club.</p>
+<p>To reflect selection patterns in team matches, the probability that a
+given roster player is selected is assumed to be proportional to their
+observed participation rate during the season (e.g., number of matches
+played by that player divided by the total number of matches played by
+the club).</p>
+<h3 id="tournament-opponents-ab-pool-with-no-rematches">Tournament
+opponents (A/B pool with no rematches)</h3>
+<p>For the national tournament, eligible opponents are drawn from the
+most recent Swiss ranking database, restricted to players belonging to
+series A and B. This restriction reflects the fact that the player
+participates only in tournaments whose relevant competitive pools are
+typically within these series, and it ensures that the analysis remains
+focused on ranking uncertainty at a sufficiently competitive level.</p>
+<p>In the baseline model, opponents are sampled uniformly from the
+eligible A/B pool. To preserve minimal tournament realism without
+modeling a full bracket, we impose a <strong>no-rematch
+constraint</strong>: once an opponent has been faced in the tournament,
+they cannot be drawn again within the same tournament simulation. This
+approximation captures the basic idea that tournament structures prevent
+repeated matchups, while remaining computationally tractable.</p>
+<hr />
+<h2 id="win-probability-models">Win Probability Models</h2>
+<p>To simulate match outcomes within the Monte Carlo framework, the
+model requires an estimate of the probability that the focal player wins
+a given match against a specific opponent. Two alternative
+win-probability models are considered: an Elo-based theoretical model
+and a data-driven machine learning model. The purpose of this comparison
+is not to assert the superiority of one model over the other, but to
+assess how sensitive ranking uncertainty is to the choice of probability
+estimator.</p>
+<h3 id="elo-based-probability-model">Elo-Based Probability Model</h3>
+<p>In the first approach, win probabilities are computed using the
+official Swiss table tennis Elo formulation. Under this model, the
+probability that player i defeats player j depends solely on the
+difference between their Elo ratings and is given by:</p>
+<p><span class="math display">\[P(i \text{ wins against } j) =
+\frac{1}{1 + 10^{\frac{E_j - E_i}{200}}}\]</span></p>
+<p>where <span class="math inline">\(E_i\)</span> and <span
+class="math inline">\(E_j\)</span> denote the Elo ratings of players i
+and j, respectively.</p>
+<p>This formulation is directly embedded in the Swiss ranking system and
+therefore serves as a natural theoretical benchmark. It assumes that the
+Elo rating fully summarizes player strength and that match outcomes are
+probabilistically determined by rating differences alone.</p>
+<h3 id="machine-learning-probability-model">Machine Learning Probability
+Model</h3>
+<p>The second approach replaces the fixed Elo probability formula with a
+data-driven probability estimator learned from historical match
+data.</p>
+<p>Rather than imposing a predefined functional relationship between Elo
+differences and win probabilities, the machine learning model infers
+this relationship empirically by observing past matches. Conceptually,
+the model learns how often players with given Elo characteristics win or
+lose and uses this information to estimate the probability of victory in
+new, unseen matchups.</p>
+<p>To avoid individual-specific overfitting and to ensure general
+applicability, the machine learning model is trained on a dataset
+comprising historical Swiss table tennis matches involving many players,
+rather than only matches played by the focal player. The trained model
+is subsequently applied to the focal player within the Monte Carlo
+simulation.</p>
+<h3 id="minimal-feature-specification">Minimal Feature
+Specification</h3>
+<p>In line with the objective of maintaining interpretability and
+limiting data-engineering complexity, the machine learning model uses a
+minimal feature set:</p>
+<ul>
+<li>Elo rating of the focal player</li>
+<li>Elo rating of the opponent</li>
+</ul>
+<p>No additional contextual variables (such as recent form, match
+importance, or competition type) are included in the baseline
+specification. This design choice ensures that the machine learning
+model remains directly comparable to the Elo-based model, as both rely
+on the same informational inputs.</p>
+<h3 id="model-choice-and-interpretation">Model Choice and
+Interpretation</h3>
+<p>A <strong>logistic regression</strong> model is used as the baseline
+machine learning classifier. This choice reflects a deliberate trade-off
+between flexibility and transparency:</p>
+<ul>
+<li>Logistic regression outputs well-calibrated probabilities.</li>
+<li>Its structure closely mirrors the logistic form of the Elo model,
+while allowing parameters to be estimated from data rather than fixed a
+priori.</li>
+<li>The resulting probability function can be interpreted as an
+empirically estimated alternative to the Elo formula.</li>
+</ul>
+<p>Importantly, the machine learning model is not assumed to outperform
+the Elo-based model by construction. Its role is to provide an empirical
+benchmark that captures observed match outcome frequencies in the
+data.</p>
+<h3 id="role-in-the-monte-carlo-simulation">Role in the Monte Carlo
+Simulation</h3>
+<p>Both probability models are embedded separately into the same Monte
+Carlo simulation pipeline. All structural assumptions, opponent sampling
+procedures, and Elo update rules are held constant. Any differences
+observed in the resulting distributions of final Elo ratings can
+therefore be attributed to differences in the underlying win-probability
+models rather than to changes in simulation design.</p>
+<h3 id="interpretation-scope">Interpretation Scope</h3>
+<p>Differences between the Elo-based and ML-based simulations are
+interpreted as reflecting <strong>model uncertainty</strong> in
+probability estimation, not as definitive evidence of predictive
+superiority. The comparison highlights how sensitive short-term ranking
+uncertainty is to the assumptions embedded in probability modeling.</p>
+<hr />
+<h2 id="elo-update-mechanism">Elo Update Mechanism</h2>
+<p>After each simulated match, the player’s Elo rating is updated
+according to the official Swiss table tennis Elo update rule. For a
+given match, the Elo change is defined as:</p>
+<p><span class="math display">\[\Delta\text{Elo} = K \times
+(\text{result} - P), \quad \text{result} \in \{1, 0\}\]</span></p>
+<p>where: - <span class="math inline">\(K = 15\)</span> is the Elo
+adjustment factor, - result equals 1 in case of a win and 0 in case of a
+loss, - <span class="math inline">\(P\)</span> is the official Elo-based
+win probability implied by the Swiss ranking system.</p>
+<p>The win probability <span class="math inline">\(P\)</span> is
+computed using the fixed Elo ratings observed at the beginning of the
+month:</p>
+<p><span class="math display">\[P = \frac{1}{1 +
+10^{\frac{E_{\text{opp}} - E_{\text{player}}}{200}}}\]</span></p>
+<p>Importantly, <strong>within a given month, Elo ratings are held
+constant</strong>. All matches are played using the player’s Elo rating
+at the beginning of the month, and Elo changes are computed
+accordingly.</p>
+<p>If the player participates in <span class="math inline">\(M\)</span>
+matches during the month, the total Elo change over the month is given
+by the sum of individual match updates:</p>
+<p><span class="math display">\[\Delta\text{Elo}_{\text{month}} =
+\sum_{m=1}^{M} \Delta\text{Elo}_m\]</span></p>
+<p>The player’s Elo rating at the end of the month is therefore:</p>
+<p><span class="math display">\[\text{Elo}_{\text{end}} =
+\text{Elo}_{\text{start}} + \Delta\text{Elo}_{\text{month}}\]</span></p>
+<p>where <span class="math inline">\(\text{Elo}_{\text{start}}\)</span>
+denotes the Elo rating at the beginning of the month.</p>
+<p>In the Monte Carlo simulation, match outcomes are generated using
+either the Elo-based probability model or the machine-learning-based
+probability model described earlier. However, <strong>Elo point updates
+always follow the official Swiss Elo update rule</strong>, ensuring that
+simulated ranking changes remain fully consistent with the real-world
+ranking system.</p>
+<h2 id="monte-carlo-assumptions">Monte Carlo Assumptions</h2>
+<p>Uncertainty in ranking evolution is modeled using Monte Carlo
+simulation.</p>
+<ul>
+<li>The same month of competition is simulated repeatedly.</li>
+<li>Each simulation uses independent random draws for opponent selection
+and match outcomes.</li>
+<li>The collection of final Elo ratings across simulations defines an
+empirical distribution of ranking outcomes.</li>
+</ul>
+<p>The number of simulations is chosen sufficiently large to ensure
+stable estimates of distributional properties such as quantiles and
+variance.</p>
+<h2 id="simplifications-and-excluded-factors">Simplifications and
+Excluded Factors</h2>
+<p>Several real-world factors are intentionally excluded from the
+model:</p>
+<ul>
+<li>Physical condition, fatigue, and injuries</li>
+<li>Psychological effects</li>
+<li>Strategic behavior and learning during tournaments</li>
+<li>Long-term form dynamics</li>
+</ul>
+<p>These exclusions are motivated by data limitations and by the desire
+to keep the model transparent and interpretable. Their potential impact
+is discussed qualitatively in the limitations section.</p>
+<h2 id="interpretation-framework">Interpretation Framework</h2>
+<p>The resulting Elo distributions are interpreted as <strong>risk
+profiles</strong>, analogous to return distributions in financial
+modeling.</p>
+<p>Differences between distributions obtained under different
+probability models reflect model uncertainty rather than purely random
+noise.</p>
+<hr />
+<h1 id="methodology-conceptual-algorithm-without-code">Methodology
+(Conceptual Algorithm Without Code)</h1>
+<p>This section describes the simulation procedure used to generate the
+distribution of end-of-month Elo ratings.</p>
+<p>The methodology translates the modeling choices and hypotheses into a
+precise algorithmic sequence, without introducing additional assumptions
+or implementation-specific details.</p>
+<h2 id="step-1-initialization">Step 1 – Initialization</h2>
+<p>At the beginning of each simulation run:</p>
+<ul>
+<li>A focal player is defined with an initial Elo rating observed at the
+start of the month.</li>
+<li>This Elo rating remains fixed throughout the entire simulated month
+and serves as the reference rating for all probability and Elo update
+calculations.</li>
+<li>All model parameters (competition structure, opponent pools,
+probability model choice) are fixed and identical across simulation
+runs.</li>
+</ul>
+<p>As a result, all variability in simulated outcomes arises solely from
+randomness in opponent selection and match outcomes.</p>
+<h2 id="step-2-definition-of-the-competitive-month">Step 2 – Definition
+of the Competitive Month</h2>
+<p>Each simulation run represents one stylized month of competition.</p>
+<p>The competitive month consists of a fixed sequence of matches,
+including:</p>
+<ul>
+<li>two league encounters, each composed of three individual matches,
+and</li>
+<li>one national tournament with a fixed total number of matches.</li>
+</ul>
+<p>The tournament structure is designed to guarantee a constant workload
+across simulations and includes institutional constraints such as the
+absence of rematches within the same tournament.</p>
+<p>The player is assumed to participate in all scheduled matches.</p>
+<h2 id="step-3-opponent-selection">Step 3 – Opponent Selection</h2>
+<p>For each match in the simulated month, an opponent is selected
+according to predefined rules:</p>
+<ul>
+<li><strong>League matches</strong>: opponents are drawn from the
+rosters of scheduled opposing clubs, with selection probabilities
+reflecting observed participation frequencies.</li>
+<li><strong>Tournament matches</strong>: opponents are sampled from an
+eligible pool of A/B-ranked players, subject to a no-rematch constraint
+within the tournament.</li>
+</ul>
+<p>Opponent Elo ratings are treated as known and fixed during the
+month.</p>
+<h2 id="step-4-win-probability-assignment">Step 4 – Win Probability
+Assignment</h2>
+<p>Once an opponent is selected, a probability of winning the match is
+assigned.</p>
+<p>Two alternative probability models are considered:</p>
+<ul>
+<li><strong>Elo-based probabilities</strong>, computed using the
+official Swiss Elo formula and the fixed initial Elo rating.</li>
+<li><strong>Machine-learning-based probabilities</strong>, estimated
+from historical match data and applied using the same Elo inputs.</li>
+</ul>
+<p>In both cases, win probabilities depend on the fixed initial Elo
+rating of the player and the opponent’s Elo rating.</p>
+<h2 id="step-5-match-outcome-simulation">Step 5 – Match Outcome
+Simulation</h2>
+<p>Given the assigned win probability:</p>
+<ul>
+<li>The match outcome is simulated as a binary random variable (win or
+loss).</li>
+<li>Outcomes are generated using independent random draws across
+matches, conditional on the assigned probabilities.</li>
+</ul>
+<p>This step captures the intrinsic randomness of competitive match
+outcomes.</p>
+<h2 id="step-6-elo-update-calculation">Step 6 – Elo Update
+Calculation</h2>
+<p>After each simulated match:</p>
+<ul>
+<li>An Elo change is computed using the official Swiss Elo update
+rule.</li>
+<li>The expected score used in the update formula is always computed
+using the player’s initial Elo rating and the opponent’s Elo
+rating.</li>
+</ul>
+<p>Although Elo changes are calculated at match level, these changes do
+not affect subsequent match probabilities within the same month.</p>
+<p>The total Elo change over the month is obtained by summing individual
+match updates.</p>
+<h2 id="step-7-end-of-month-elo-recording">Step 7 – End-of-Month Elo
+Recording</h2>
+<p>At the end of the simulated month:</p>
+<ul>
+<li>The player’s final Elo rating is computed as the initial Elo plus
+the total accumulated Elo change.</li>
+<li>This final Elo value represents one possible realization of the
+month under the given probability model.</li>
+</ul>
+<h2 id="step-8-monte-carlo-repetition">Step 8 – Monte Carlo
+Repetition</h2>
+<p>Steps 1–7 are repeated a large number of times.</p>
+<p>Each repetition represents an alternative but plausible realization
+of the same competitive month, differing only through random opponent
+selection and match outcomes.</p>
+<p>This procedure generates an <strong>empirical distribution</strong>
+of end-of-month Elo ratings.</p>
+<h2 id="step-9-aggregation-and-analysis">Step 9 – Aggregation and
+Analysis</h2>
+<p>From the simulated distribution:</p>
+<ul>
+<li>summary statistics (mean, variance, quantiles) are computed,</li>
+<li>distributional properties such as dispersion and tail behavior are
+analyzed,</li>
+<li>results are compared across probability models.</li>
+</ul>
+<p>No individual simulation run is interpreted as a prediction. Only
+aggregate distributional features are used for interpretation.</p>
+<h2 id="methodological-clarification">Methodological Clarification</h2>
+<p>The simulation does not aim to predict future results. It addresses
+the following counterfactual question:</p>
+<blockquote>
+<p>Given a fixed competitive month and fixed Elo reference ratings, how
+much variability in end-of-month Elo outcomes arises purely from
+randomness and probability modeling assumptions?</p>
+</blockquote>
+<h2 id="why-this-methodology-is-consistent">Why This Methodology Is
+Consistent</h2>
+<ul>
+<li>It respects the institutional rule that Elo ratings are updated only
+after the month.</li>
+<li>It ensures full comparability across probability models.</li>
+<li>It provides a clean additive structure for interpreting Elo
+risk.</li>
+</ul>
+<hr />
+<h1 id="expected-results-and-interpretation">Expected Results and
+Interpretation</h1>
+<p>This section outlines the qualitative patterns and distributional
+features that are expected to emerge from the Monte Carlo simulations,
+prior to observing any numerical results. These expectations are derived
+directly from the structure of the model, the competition format, and
+the probabilistic assumptions described in the previous sections.</p>
+<p>The purpose of this section is not to anticipate specific numerical
+values, but to clarify the mechanisms through which uncertainty arises
+and to define interpretable benchmarks for the subsequent empirical
+results.</p>
+<h2 id="expected-shape-of-the-elo-distribution">Expected Shape of the
+Elo Distribution</h2>
+<p>Given that the monthly Elo change is modeled as the sum of multiple
+independent match-level updates, the distribution of end-of-month Elo
+ratings is expected to be:</p>
+<ul>
+<li>approximately unimodal,</li>
+<li>centered around a mean close to the expected Elo change implied by
+the win probabilities,</li>
+<li>with dispersion increasing as the number of matches increases.</li>
+</ul>
+<p>However, because individual match outcomes are binary and Elo updates
+are asymmetric when win probabilities differ from 50%, the resulting
+distribution may deviate from strict normality. In particular, mild
+skewness may arise when the player is systematically favored or
+unfavored against typical opponents.</p>
+<h2
+id="expected-role-of-match-volume-and-competition-structure">Expected
+Role of Match Volume and Competition Structure</h2>
+<p>The simulated month includes a relatively large number of matches,
+combining league encounters and a tournament.</p>
+<p>As a result:</p>
+<ul>
+<li>the variance of the monthly Elo change is expected to be
+substantially larger than the variance of a single match outcome,</li>
+<li>extreme positive or negative outcomes become plausible even if the
+expected Elo change is moderate.</li>
+</ul>
+<p>The tournament component, which introduces a broader and less
+predictable opponent pool, is expected to contribute disproportionately
+to the tails of the distribution, increasing both upside and downside
+risk relative to league play alone.</p>
+<h2 id="expected-impact-of-fixed-elo-within-the-month">Expected Impact
+of Fixed Elo Within the Month</h2>
+<p>Because the Elo rating is held fixed throughout the month:</p>
+<ul>
+<li>win probabilities do not adapt to interim success or failure,</li>
+<li>early wins do not mechanically increase the probability of later
+wins, and vice versa.</li>
+</ul>
+<p>This absence of intra-month feedback implies that the total Elo
+change is an additive process driven by independent realizations.
+Consequently, the distribution of outcomes reflects pure outcome
+uncertainty rather than dynamic momentum effects.</p>
+<p>This design choice is expected to yield cleaner and more
+interpretable distributions, at the cost of ignoring short-term
+psychological or form-related dynamics.</p>
+<h2 id="expected-comparison-between-probability-models">Expected
+Comparison Between Probability Models</h2>
+<p>When comparing simulations based on the Elo-based probability model
+and the machine-learning-based probability model, several qualitative
+differences may emerge.</p>
+<p>If both models produce similar average win probabilities across
+matchups, the mean end-of-month Elo change is expected to be comparable.
+However, differences may arise in higher-order distributional
+properties:</p>
+<ul>
+<li>dispersion may differ if one model assigns more extreme
+probabilities,</li>
+<li>tail risk may increase if the machine learning model captures
+nonlinearities or asymmetries not present in the Elo formula,</li>
+<li>skewness may differ if one model systematically over- or
+underestimates the player’s winning chances against specific opponent
+segments.</li>
+</ul>
+<p>Importantly, any such differences are interpreted as reflecting
+<strong>model uncertainty</strong> in probability estimation, not as
+definitive evidence of predictive superiority.</p>
+<h2 id="expected-sensitivity-to-opponent-sampling">Expected Sensitivity
+to Opponent Sampling</h2>
+<p>Because opponents are sampled probabilistically rather than
+deterministically, the distribution of Elo outcomes is expected to be
+sensitive to the realized mix of opponent strengths.</p>
+<p>Simulations in which the player faces an unusually strong or weak set
+of opponents are expected to populate the lower or upper tails of the
+distribution, respectively. This mechanism highlights that ranking
+uncertainty arises not only from match outcomes but also from the
+stochastic nature of competition exposure.</p>
+<h2 id="interpretation-framework-1">Interpretation Framework</h2>
+<p>The simulated Elo distributions are interpreted as <strong>risk
+profiles</strong>, analogous to return distributions in financial
+contexts.</p>
+<p>In this interpretation:</p>
+<ul>
+<li>the mean Elo change represents expected performance,</li>
+<li>the dispersion captures ranking volatility,</li>
+<li>the lower tail reflects downside risk,</li>
+<li>the upper tail reflects upside potential.</li>
+</ul>
+<p>The comparison across probability models therefore informs us how
+sensitive perceived ranking risk is to modeling assumptions, rather than
+providing a single forecasted outcome.</p>
+<h2 id="role-of-this-section">Role of This Section</h2>
+<p>This section establishes clear expectations against which the
+empirical simulation results can be evaluated. Deviations between
+observed results and these expectations will be interpreted as
+informative signals about the interaction between competition structure,
+probability modeling, and stochastic variability.</p>
+</body>
+</html>

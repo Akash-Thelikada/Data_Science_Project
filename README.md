@@ -8,7 +8,7 @@ A Python project for simulating and analyzing Swiss table tennis Elo rating chan
 
 ## Project Overview
 
-This project treats a month of competition as a **random experiment** rather than a fixed trajectory. Instead of predicting a single future Elo value, we simulate the same month **1000 times** to understand the **distribution of possible outcomes**.
+This project treats a month of competition as a **random experiment** rather than a fixed trajectory. Instead of predicting a single future Elo value, we simulate the same month **10000 times** to understand the **distribution of possible outcomes**.
 
 ### Key Idea
 
@@ -111,7 +111,7 @@ Edit these values in `main.py`:
 
 ```python
 RANDOM_SEED = 42           # For reproducibility
-NUM_SIMULATIONS = 1000     # Number of Monte Carlo runs
+NUM_SIMULATIONS = 10000     # Number of Monte Carlo runs
 INITIAL_ELO = 1500         # Your starting Elo (REPLACE!)
 K_FACTOR = 15              # Swiss TT K-factor
 ```
